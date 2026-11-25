@@ -29,7 +29,7 @@ class Config:
     llm_id: str = "Qwen/Qwen3-4B-Instruct-2507"
     llm_fallback_id: str = "Qwen/Qwen2.5-1.5B-Instruct"  # only if the 4B model fails on the T4
     embed_id: str = "BAAI/bge-small-en-v1.5"
-    embed_device: str = "cpu"  # keep GPU memory for the LLM; switch to "cuda" if ingestion is too slow
+    embed_device: str = "auto"  # CUDA if available: bge-small is tiny, and CPU embedding measured ~6 chunks/s locally
 
     # Chunking (counted in BGE tokens; BGE silently truncates anything above 512)
     chunk_tokens: int = 350
