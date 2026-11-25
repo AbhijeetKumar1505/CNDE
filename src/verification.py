@@ -110,6 +110,13 @@ def verify(answer_result, embedder, min_retrieval_score=0.0, sem_threshold=0.80,
             flags.append(f"Answer mentions page {p}, which is not among the retrieved pages.")
     if answer_result.get("hit_max_tokens"):
         flags.append("Generation hit the max_new_tokens limit; the answer may be truncated.")
+    for sid in valid:
+        e = evidence[int(sid[1:]) - 1]
+        if "[Table" in e["text"]:
+            # Numeric fidelity proves each number occurs in the evidence, not that it was read from the
+            # right row/column of a table, so table-derived answers are explicitly flagged for review.
+            flags.append(f"[{sid}] is a table ({e['source']}, p. {e['page']}): row/column pairing of values is "
+                         f"not machine-checked; confirm against the source page.")
 
     # -- 2. claims: answer (+ conflicts) sentences, checked against their own cited passages
     sections = answer_result.get("sections") or {"Answer": text}
