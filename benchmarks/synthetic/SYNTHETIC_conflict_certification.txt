@@ -1,0 +1,5 @@
+SYNTHETIC TEST DOCUMENT - created for benchmark testing only. This is not a real standard.
+
+Personnel Certification
+
+The period of Special NDE certification shall be 5 years.
