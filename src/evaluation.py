@@ -30,7 +30,7 @@ def load_benchmark(path) -> list:
 
 
 def _norm(text: str) -> str:
-    text = text.lower().replace("–", "-").replace("−", "-").replace(" ", " ")
+    text = text.lower().replace("–", "-").replace("−", "-").replace("\u00a0", " ")
     return re.sub(r"\s+", " ", text)
 
 

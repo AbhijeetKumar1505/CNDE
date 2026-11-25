@@ -13,7 +13,7 @@ from .retrieval import retrieve
 from .verification import verify
 
 
-def answer_question(question, index, chunks, embedder, model, tokenizer, cfg, variant="v2") -> dict:
+def answer_question(question, index, chunks, embedder, model, tokenizer, cfg, variant="v3") -> dict:
     t0 = time.perf_counter()
     evidence = retrieve(question, index, chunks, embedder, cfg.top_k)
     retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
