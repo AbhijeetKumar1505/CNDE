@@ -31,6 +31,11 @@ abstention is the second layer).
 
 ## Architecture
 
+![Module architecture](docs/architecture_diagram.png)
+
+*Module diagram generated with gitdiagram.com. The flow below adds the retrieval gate and table extraction.
+A detailed walkthrough of every step and formula is in [docs/INTERVIEW_CHEATSHEET.md](docs/INTERVIEW_CHEATSHEET.md).*
+
 ```
 PDF / DOCX / TXT
   -> extraction (PyMuPDF blocks + find_tables(); python-docx incl. tables)
