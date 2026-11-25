@@ -1,0 +1,35 @@
+# --- Never commit: documents, model weights, indexes, results (repo is PUBLIC) ---
+workspace/
+data/
+models/
+indexes/
+outputs/
+results/
+*.pdf
+*.docx
+*.doc
+*.faiss
+*.index
+*.npy
+*.npz
+*.safetensors
+*.bin
+*.pt
+*.gguf
+
+# --- Secrets ---
+.env
+*.env
+*token*
+*credentials*
+.claude/settings.local.json
+
+# --- Python / Jupyter / Colab ---
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.gradio/
+flagged/
+sample_data/

@@ -1,0 +1,10 @@
+# Target: Google Colab, NVIDIA T4 runtime.
+# torch is preinstalled on Colab with the matching CUDA build -- do NOT reinstall it here.
+transformers>=4.51.0        # Qwen3 support starts at 4.51
+accelerate>=0.30
+bitsandbytes>=0.43          # 4-bit NF4 quantization
+sentence-transformers>=3.0  # BGE embeddings
+faiss-cpu>=1.8              # CPU index is enough for a few thousand chunks; avoids CUDA-version issues
+pymupdf>=1.24               # PDF extraction (import name: fitz)
+python-docx>=1.1            # DOCX extraction
+gradio>=4.40
