@@ -82,7 +82,7 @@ def format_evidence(evidence) -> str:
     return "\n\n".join(blocks)
 
 
-def build_messages(question, evidence, variant="v2") -> list:
+def build_messages(question, evidence, variant="v3") -> list:
     if variant not in SYSTEM_PROMPTS:
         raise ValueError(f"Unknown prompt variant '{variant}'. Options: {sorted(SYSTEM_PROMPTS)}")
     user = f"Evidence passages:\n\n{format_evidence(evidence)}\n\nQuestion: {question.strip()}"
@@ -190,7 +190,7 @@ def smoke_test(model, tokenizer, max_new_tokens=64) -> dict:
 
 
 @torch.inference_mode()
-def generate_answer(question, evidence, model, tokenizer, variant="v2", max_new_tokens=512,
+def generate_answer(question, evidence, model, tokenizer, variant="v3", max_new_tokens=512,
                     max_input_tokens=4096) -> dict:
     """Generate a cited answer. Over-budget prompts drop the lowest-ranked passages (reported), never
     truncate a passage or the system prompt."""
