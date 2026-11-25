@@ -90,14 +90,74 @@ def _remove_boilerplate(pages: list) -> None:
         p["blocks"] = [b for b in p["blocks"] if key(b["text"]) not in boiler]
 
 
+_TABLE_HINT = re.compile(r"\btable\b", re.I)   # find_tables() is slow (~0.3 s/page); only run it where useful
+
+
+def _cell(text: str, sep: str = " / ") -> str:
+    text = clean_text(text or "").replace("**", "").replace("<br>", sep)
+    return re.sub(r"\s+", " ", text).strip(" ,")
+
+
+def _table_blocks(page, text_blocks):
+    """Tables as row-wise, self-describing lines ("group | Column: value | ..."), so each value stays
+    attached to its row and column. Plain text extraction flattens tables and lets the LLM mis-pair
+    values (seen on NASA-STD-5009C Table 1). Each row repeats a short label carrying the table's unit,
+    because a row may end up in a different chunk from the caption.
+
+    Returns (blocks with a "y" position, table rectangles used to drop the flattened duplicate text)."""
+    import pymupdf
+
+    out, rects = [], []
+    for t in page.find_tables().tables:
+        md = t.to_markdown()
+        lines = [l for l in md.splitlines() if l.startswith("|")]
+        if len(lines) < 3 or _TOC_LEADER.search(md):           # table-of-contents pages are detected as tables
+            continue
+        split = lambda l: l.strip().strip("|").split("|")
+        rect = pymupdf.Rect(t.bbox)
+        header, body = [_cell(h, " ") for h in split(lines[0])], lines[2:]
+        caption = ""
+        if re.match(r"\s*table\b", "".join(header), re.I) and body:   # caption detected as the header row
+            caption, header, body = "".join(header), [_cell(h, " ") for h in split(body[0])], body[1:]
+        if not caption:                                         # caption = text blocks between "Table ..." and the grid
+            above = [b for b in text_blocks if b[3] <= rect.y0 + 2 and rect.y0 - b[3] < 80]
+            starts = [b for b in above if re.match(r"\s*table\b", b[4], re.I)]
+            if starts:
+                top = max(starts, key=lambda b: b[1])[1]
+                caption = " ".join(_cell(b[4], " ") for b in sorted(above, key=lambda b: b[1]) if b[1] >= top)
+        m = re.match(r"\s*table\s+([\w-]+(?:\.\d+)?)", caption, re.I)
+        unit = re.search(r"\((millimeters|inches|mm|in\.?)\)", caption, re.I)
+        label = f"[Table{' ' + m.group(1) if m else ''}{' (' + unit.group(1) + ')' if unit else ''}]"
+        rows, group = [], ""
+        for line in body:
+            cells = [_cell(c) for c in split(line)]
+            values = [c for c in cells if c]
+            if not values:
+                continue
+            if len(cells) > 1 and len(set(values)) == 1:      # spanning row, e.g. "Penetrant NDE"
+                group = values[0]
+                continue
+            pairs = [f"{h}: {v}" if h else v for h, v in zip(header, cells) if v]
+            rows.append(" | ".join([label] + ([group] if group else []) + pairs))
+        if rows:
+            out.append({"text": "\n".join(([caption] if caption else []) + rows), "heading": None, "y": rect.y0})
+            rects.append(rect)
+    return out, rects
+
+
 def _extract_pdf(path: Path) -> list:
     import pymupdf
 
     pages = []
     with pymupdf.open(path) as doc:
         for i, page in enumerate(doc, start=1):
-            blocks = [_make_block(b[4]) for b in page.get_text("blocks", sort=True) if b[6] == 0]  # 0 = text
-            pages.append({"source": path.name, "page": i, "blocks": [b for b in blocks if b["text"]]})
+            raw = [b for b in page.get_text("blocks", sort=True) if b[6] == 0]   # type 0 = text
+            tables, rects = _table_blocks(page, raw) if _TABLE_HINT.search(page.get_text()) else ([], [])
+            inside = lambda b: any(r.contains(pymupdf.Point((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)) for r in rects)
+            blocks = [{**_make_block(b[4]), "y": b[1]} for b in raw if not inside(b)] + tables
+            blocks.sort(key=lambda b: b["y"])                  # tables keep their reading-order position
+            pages.append({"source": path.name, "page": i,
+                          "blocks": [{"text": b["text"], "heading": b["heading"]} for b in blocks if b["text"]]})
     _remove_boilerplate(pages)
     return pages
 
