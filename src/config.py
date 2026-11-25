@@ -37,7 +37,7 @@ class Config:
 
     # Retrieval
     top_k: int = 5
-    min_retrieval_score: float = 0.0  # abstention gate; placeholder until tuned on the benchmark
+    min_retrieval_score: float = 0.65  # abstention gate. Provisional: probes scored 0.78-0.83 in-domain vs 0.55 out-of-scope; tune on benchmark
 
     # Generation
     max_input_tokens: int = 4096

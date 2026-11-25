@@ -25,14 +25,14 @@ SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 
 # Private-use code points emitted by PDFs that use the Symbol font. They are MAPPED, not stripped:
 # dropping "≤" from "0.64 ≤ t ≤ 1.27" silently changes a requirement. Verified on NASA-STD-5009C
-# (its acronym list reads " less than or equal to") and FAA AC 43.13-1B ("5-8.5-14.").
+# (its acronym list reads "\uf0a3 less than or equal to") and FAA AC 43.13-1B ("5-8.\uf8e75-14.").
 GLYPH_MAP = {
-    "": "≤", "": "≥", "": "±", "": "°", "": "μ",
-    "": "×", "": "≠", "": "≈", "": "→", "": "•", "": "–",
-    "ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi", "ﬄ": "ffl",
-    " ": " ", "­": "",  # non-breaking space, soft hyphen
+    "\uf0a3": "≤", "\uf0b3": "≥", "\uf0b1": "±", "\uf0b0": "°", "\uf06d": "μ",
+    "\uf0b4": "×", "\uf0b9": "≠", "\uf0bb": "≈", "\uf0ae": "→", "\uf0b7": "•", "\uf8e7": "–",
+    "\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi", "\ufb04": "ffl",
+    "\u00a0": " ", "\u00ad": "",  # non-breaking space, soft hyphen
 }
-_PRIVATE_USE = re.compile("[-]")
+_PRIVATE_USE = re.compile("[\ue000-\uf8ff]")
 
 # Heading patterns seen in NDT standards / advisory circulars.
 _HEADING_PATTERNS = [

@@ -51,8 +51,12 @@ def extract_numbers(text: str) -> list:
     return [(float(m.group(1)), _norm_unit(m.group(2)), m.group(0).strip()) for m in _NUMBER.finditer(text)]
 
 
+_NO_CONFLICT = re.compile(r"\b(none|no conflicts?|no disagreement|do not (conflict|disagree))\b", re.I)
+
+
 def _split_sentences(text: str) -> list:
-    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z(\[])", text.strip())
+    # No split before "[": a citation written after the full stop ("... cleaning. [S1]") stays with its sentence.
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z(])", text.strip())
     return [p.strip() for p in parts if p.strip()]
 
 
@@ -109,7 +113,10 @@ def verify(answer_result, embedder, min_retrieval_score=0.0, sem_threshold=0.80,
 
     # -- 2. claims: answer (+ conflicts) sentences, checked against their own cited passages
     sections = answer_result.get("sections") or {"Answer": text}
-    claim_text = " ".join(sections.get(k, "") for k in ("Answer", "Conflicts"))
+    conflict = sections.get("Conflicts", "")
+    if _NO_CONFLICT.search(conflict):
+        conflict = ""                                   # "There is no conflict" is not a claim to check
+    claim_text = " ".join([sections.get("Answer", ""), conflict])
     # A claim = sentence with >=2 content words or a number; short answers ("5 MHz [S1].") stay checkable.
     claims = [s for s in _split_sentences(claim_text)
               if len(_content_words(_CITATION.sub(" ", s))) >= 2 or extract_numbers(s)]
@@ -165,9 +172,8 @@ def verify(answer_result, embedder, min_retrieval_score=0.0, sem_threshold=0.80,
     scores = {"citation_validity": round(citation_validity, 3), "numeric_fidelity": round(numeric_fidelity, 3),
               "claim_support": round(claim_support, 3)}
     scores["grounding_score"] = round(sum(scores.values()) / 3, 3)
-    conflict = sections.get("Conflicts", "")
     conflict_ids = set(re.findall(r"S\s*(\d+)", " ".join(_CITATION.findall(conflict))))
-    if conflict and len(conflict_ids) >= 2 and not re.search(r"\b(none|no conflicts?)\b", conflict, re.I):
+    if conflict and len(conflict_ids) >= 2:
         status = "Conflicting evidence"
     elif min(scores["citation_validity"], numeric_fidelity, claim_support) >= 0.999:
         status = "Supported"
