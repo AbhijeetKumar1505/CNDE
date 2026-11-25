@@ -20,8 +20,21 @@ scored for hallucination risk by deterministic checks. Runs fully locally on a C
 Retrieval (21 questions with gold pages): **Recall@1 0.714 · Recall@3 0.905 · Recall@5 0.952 · MRR 0.821**.
 Same 24 questions and the same retrieved evidence for every variant; only the prompt differs.
 Small benchmark: one question = 4.8 points of accuracy, so v3 vs v2 is a one-question difference.
+**Reproducible:** two independent runs on fresh T4 runtimes gave identical accuracy, abstention, citation,
+unsupported-claim and retrieval metrics (greedy decoding); only latency varied (v3 median 5.81 s vs 5.66 s).
+
+**Live app check (Gradio share link, T4):** "What minimum qualification is required for personnel performing NDE
+of fracture-critical hardware?" → "qualified and certified Level II in accordance with NAS 410 [S1]"
+(NASA-STD-5009C p. 47, Supported, 10.5 s round trip). "What is the required penetrant dwell time?" → abstained
+by the retrieval gate (top score 0.64 vs threshold 0.65 — a narrow margin, which is why the model's own
+abstention is the second layer).
 
 ## Architecture
+
+![Module architecture](docs/architecture_diagram.png)
+
+*Module diagram generated with gitdiagram.com. The flow below adds the retrieval gate and table extraction.
+A detailed walkthrough of every step and formula is in [docs/INTERVIEW_CHEATSHEET.md](docs/INTERVIEW_CHEATSHEET.md).*
 
 ```
 PDF / DOCX / TXT
